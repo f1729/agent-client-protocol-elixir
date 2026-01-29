@@ -1,0 +1,33 @@
+defmodule ACP.PlanTest do
+  use ExUnit.Case, async: true
+
+  test "plan entry to_json/from_json" do
+    entry = ACP.PlanEntry.new("Write code", :high, :pending)
+    json = ACP.PlanEntry.to_json(entry)
+    assert json == %{"content" => "Write code", "priority" => "high", "status" => "pending"}
+    {:ok, decoded} = ACP.PlanEntry.from_json(json)
+    assert decoded.content == "Write code"
+    assert decoded.priority == :high
+    assert decoded.status == :pending
+  end
+
+  test "plan to_json/from_json" do
+    plan =
+      ACP.Plan.new([
+        ACP.PlanEntry.new("Step 1", :high, :completed),
+        ACP.PlanEntry.new("Step 2", :medium, :in_progress)
+      ])
+
+    json = ACP.Plan.to_json(plan)
+    assert length(json["entries"]) == 2
+    {:ok, decoded} = ACP.Plan.from_json(json)
+    assert length(decoded.entries) == 2
+    assert hd(decoded.entries).status == :completed
+  end
+
+  test "plan with meta" do
+    plan = %ACP.Plan{entries: [], meta: %{"key" => "value"}}
+    json = ACP.Plan.to_json(plan)
+    assert json["_meta"] == %{"key" => "value"}
+  end
+end
